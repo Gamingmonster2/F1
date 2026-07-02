@@ -1,3 +1,13 @@
+An elegant and robust solution has been implemented to resolve the browser's Web Audio API autoplay restriction warnings. 
+
+### Key Improvements:
+1. **Deferred AudioContext Creation**: The `AudioContext` is no longer initialized during the asset preloading phase. Instead, raw audio files are fetched as `ArrayBuffer`s and stored.
+2. **User Gesture Requirement**: The game no longer starts automatically. Once loading is complete, a high-tech **"START GAME"** button is presented on the loading screen.
+3. **Safe Activation**: Clicking the "START GAME" button triggers the initialization and decoding of all preloaded audio buffers inside a valid user gesture context, completely satisfying modern browser autoplay policies and eliminating console warnings.
+
+Here is the complete, updated code:
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -535,6 +545,9 @@
         </div>
         <div id="loader-text" class="loader-status">Initializing System...</div>
 
+        <!-- START GAME Button (Initially Hidden) -->
+        <button id="btn-start-game" class="btn" style="display: none; margin-bottom: 25px; z-index: 110;">START GAME</button>
+
         <!-- Tutorial / Guide -->
         <div class="tutorial-panel">
             <div class="tutorial-title">Combat Training Guide</div>
@@ -590,34 +603,47 @@
                 this.synthesizer = new ProceduralSynth();
             }
 
-            init() {
+            async init() {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    await this.ctx.resume();
+                }
+                if (this.rawBuffers) {
+                    const raw = this.rawBuffers;
+                    delete this.rawBuffers; // Prevent double decoding
+                    const promises = Object.keys(raw).map(async (name) => {
+                        try {
+                            const decodedData = await this.ctx.decodeAudioData(raw[name]);
+                            this.buffers[name] = decodedData;
+                            console.log(`Successfully decoded audio: ${name}`);
+                        } catch (e) {
+                            console.warn(`Failed to decode audio "${name}":`, e);
+                        }
+                    });
+                    await Promise.all(promises);
                 }
             }
 
             async preloadAudio(name, url) {
-                this.init();
                 try {
                     const response = await fetch(url);
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     const arrayBuffer = await response.arrayBuffer();
-                    const decodedData = await this.ctx.decodeAudioData(arrayBuffer);
-                    this.buffers[name] = decodedData;
-                    console.log(`Successfully loaded audio: ${name}`);
+                    this.rawBuffers = this.rawBuffers || {};
+                    this.rawBuffers[name] = arrayBuffer;
+                    console.log(`Successfully preloaded raw audio: ${name}`);
                 } catch (e) {
-                    console.warn(`Could not load audio file "${url}". Using procedural synthesizer fallback.`, e);
+                    console.warn(`Could not preload audio file "${url}". Using procedural synthesizer fallback.`, e);
                 }
             }
 
             play(name) {
-                this.init();
-                if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
+                this.init(); // Fire-and-forget initialization safety check
 
                 const buffer = this.buffers[name];
-                if (buffer) {
+                if (buffer && this.ctx) {
                     const source = this.ctx.createBufferSource();
                     source.buffer = buffer;
                     source.connect(this.ctx.destination);
@@ -794,9 +820,6 @@
         // Unlock audio context on user interaction safely
         function unlockAudio() {
             audioManager.init();
-            if (audioManager.ctx && audioManager.ctx.state === 'suspended') {
-                audioManager.ctx.resume();
-            }
         }
         window.addEventListener('click', unlockAudio);
         window.addEventListener('keydown', unlockAudio);
@@ -1448,8 +1471,22 @@
 
             if (loadedItems >= totalItems) {
                 setTimeout(() => {
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    startMatch();
+                    // Hide loader clock and progress bar, show Start button
+                    const clockEl = document.querySelector('.loader-clock');
+                    const barEl = document.querySelector('.loader-bar-outer');
+                    if (clockEl) clockEl.style.display = 'none';
+                    if (barEl) barEl.style.display = 'none';
+                    
+                    document.getElementById('loader-text').innerText = 'Ready to Fight!';
+                    const startBtn = document.getElementById('btn-start-game');
+                    if (startBtn) {
+                        startBtn.style.display = 'block';
+                        startBtn.addEventListener('click', async () => {
+                            await audioManager.init();
+                            document.getElementById('loading-screen').classList.add('hidden');
+                            startMatch();
+                        });
+                    }
                 }, 800);
             }
         }
