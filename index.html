@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>"> 
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>"> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>F1 Street Fighter</title>
-    <link rel="icon" href="data:,">
+    <title>F1 Street Fighter - Elite Edition</title>
     <style>
         :root {
             --cyan: #00f3ff;
             --red: #ff0055;
-            --dark: #0a0a0c;
-            --light: #f0f0f5;
+            --dark: #0a0a12;
+            --light: #f0f4f8;
             --gray: #1e1e24;
+            --transition-speed: 0.5s;
         }
 
         * {
@@ -20,6 +20,7 @@
             user-select: none;
             margin: 0;
             padding: 0;
+            -webkit-user-drag: none;
         }
 
         body, html {
@@ -28,7 +29,8 @@
             overflow: hidden;
             background-color: var(--dark);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: var(--light);
+            color: #fff;
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
         }
 
         #canvas-container {
@@ -84,7 +86,7 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 6px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .player .character-name { color: var(--cyan); }
@@ -92,51 +94,52 @@
 
         .bar-outer {
             width: 100%;
-            height: 20px;
-            background: rgba(0,0,0,0.6);
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 3px;
+            height: 24px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
         .bar-inner {
             height: 100%;
             width: 100%;
-            transition: width 0.2s cubic-bezier(0.1, 0.8, 0.3, 1);
+            transition: width 0.15s cubic-bezier(0.1, 0.8, 0.3, 1);
         }
 
         .player .bar-inner {
             background: linear-gradient(90deg, #0088ff, var(--cyan));
-            box-shadow: 0 0 10px var(--cyan);
+            box-shadow: 0 0 12px var(--cyan);
             transform-origin: left;
         }
 
         .enemy .bar-inner {
             background: linear-gradient(90deg, var(--red), #ff6600);
-            box-shadow: 0 0 10px var(--red);
+            box-shadow: 0 0 12px var(--red);
             transform-origin: right;
         }
 
         .round-tracker {
             text-align: center;
-            min-width: 120px;
+            min-width: 140px;
         }
 
         .round-title {
             font-size: 12px;
             letter-spacing: 3px;
-            color: #888;
+            color: #aaa;
             text-transform: uppercase;
             margin-bottom: 4px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         .round-number {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 900;
             color: #fff;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            text-shadow: 0 0 12px rgba(255,255,255,0.6);
         }
 
         .score-dots {
@@ -147,26 +150,51 @@
         }
 
         .dot {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-        }
-
-        .dot.active {
-            background: #fff;
-            box-shadow: 0 0 8px #fff;
+            background: rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
         }
 
         .dot.active.player-dot {
             background: var(--cyan);
-            box-shadow: 0 0 8px var(--cyan);
+            box-shadow: 0 0 10px var(--cyan);
+            border-color: #fff;
         }
 
         .dot.active.enemy-dot {
             background: var(--red);
-            box-shadow: 0 0 8px var(--red);
+            box-shadow: 0 0 10px var(--red);
+            border-color: #fff;
+        }
+
+        /* Theme Toggle Button */
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            pointer-events: auto;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #theme-toggle:hover {
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px var(--cyan);
+            transform: scale(1.05);
         }
 
         /* Screen Overlays */
@@ -176,13 +204,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 10, 12, 0.85);
+            background: rgba(10, 10, 18, 0.95);
             z-index: 100;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.5s ease;
         }
 
         .overlay.hidden {
@@ -214,40 +242,109 @@
 
         #loading-screen {
             background: var(--dark);
+            color: #fff;
         }
 
         .loader-title {
-            font-size: 32px;
+            font-size: 42px;
             font-weight: 900;
-            letter-spacing: 8px;
+            letter-spacing: 10px;
             text-transform: uppercase;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             background: linear-gradient(45deg, var(--cyan), var(--red));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        /* Animated Loading Clock */
+        .loader-clock {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .loader-bar-outer {
-            width: 250px;
+            width: 320px;
             height: 6px;
             background: rgba(255,255,255,0.1);
             border-radius: 3px;
             overflow: hidden;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .loader-bar-inner {
             width: 0%;
             height: 100%;
-            background: var(--cyan);
+            background: linear-gradient(90deg, var(--cyan), #0088ff);
             transition: width 0.1s ease;
         }
 
         .loader-status {
-            font-size: 11px;
-            color: #666;
-            letter-spacing: 1px;
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 2px;
             text-transform: uppercase;
+            margin-bottom: 40px;
+        }
+
+        /* Tutorial Panel */
+        .tutorial-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .tutorial-title {
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+
+        .tutorial-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            text-align: left;
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .tutorial-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .key-cap {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #fff;
+            font-size: 11px;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.4);
         }
 
         #announcer-overlay {
@@ -256,14 +353,15 @@
         }
 
         #announcer-text {
-            font-size: 80px;
+            font-size: 90px;
             font-weight: 900;
-            letter-spacing: 6px;
+            letter-spacing: 8px;
             text-transform: uppercase;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-shadow: 0 10px 30px rgba(0,0,0,0.9);
             transform: scale(0.5);
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #fff;
         }
 
         #announcer-text.show {
@@ -279,40 +377,41 @@
             width: 100%;
             display: none;
             justify-content: space-between;
-            padding: 0 40px;
+            padding: 0 30px;
             z-index: 50;
         }
 
         .control-group {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             pointer-events: auto;
         }
 
         .ctrl-btn {
-            width: 64px;
-            height: 64px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.5);
             border: 2px solid rgba(255,255,255,0.2);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
             touch-action: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: background 0.1s, transform 0.1s;
         }
 
         .ctrl-btn:active {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
             border-color: var(--cyan);
-            transform: scale(0.95);
+            transform: scale(0.9);
         }
 
         .ctrl-btn.action-btn {
-            background: rgba(0, 243, 255, 0.1);
+            background: rgba(0, 243, 255, 0.15);
             border-color: rgba(0, 243, 255, 0.4);
         }
 
@@ -321,8 +420,18 @@
             color: var(--dark);
         }
 
+        .ctrl-btn.kick-btn {
+            background: rgba(255, 100, 0, 0.15);
+            border-color: rgba(255, 100, 0, 0.4);
+        }
+
+        .ctrl-btn.kick-btn:active {
+            background: #ff6600;
+            color: #fff;
+        }
+
         .ctrl-btn.block-btn {
-            background: rgba(255, 0, 85, 0.1);
+            background: rgba(255, 0, 85, 0.15);
             border-color: rgba(255, 0, 85, 0.4);
         }
 
@@ -338,13 +447,14 @@
             left: 50%;
             transform: translateX(-50%);
             font-size: 11px;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.5);
             letter-spacing: 2px;
             text-transform: uppercase;
             z-index: 10;
             pointer-events: none;
             text-align: center;
             line-height: 1.6;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         @media (max-width: 768px) {
@@ -355,7 +465,7 @@
                 display: none;
             }
             #announcer-text {
-                font-size: 48px;
+                font-size: 50px;
             }
         }
     </style>
@@ -363,6 +473,8 @@
 <body>
 
     <div id="canvas-container"></div>
+
+    <button id="theme-toggle">Theme: Dark</button>
 
     <div id="hud">
         <div class="header-ui">
@@ -403,23 +515,56 @@
             <div class="ctrl-btn" id="btn-right">▶</div>
         </div>
         <div class="control-group">
-            <div class="ctrl-btn action-btn" id="btn-punch">HIT</div>
+            <div class="ctrl-btn action-btn" id="btn-punch">PCH</div>
+            <div class="ctrl-btn kick-btn" id="btn-kick">KCK</div>
             <div class="ctrl-btn block-btn" id="btn-block">BLK</div>
             <div class="ctrl-btn" id="btn-jump">JMP</div>
         </div>
     </div>
 
     <div id="desktop-info">
-        WASD / ARROWS : MOVE &nbsp;|&nbsp; SPACE : JUMP &nbsp;|&nbsp; B : BLOCK &nbsp;|&nbsp; CLICK : PUNCH
+        WASD / ARROWS : MOVE &nbsp;|&nbsp; SPACE : JUMP &nbsp;|&nbsp; B : BLOCK &nbsp;|&nbsp; LEFT-CLICK : PUNCH &nbsp;|&nbsp; RIGHT-CLICK : KICK
     </div>
 
     <!-- Screen Overlays -->
     <div id="loading-screen" class="overlay">
         <div class="loader-title">F1 FIGHTER</div>
+        <div class="loader-clock"></div>
         <div class="loader-bar-outer">
             <div id="loader-progress" class="loader-bar-inner"></div>
         </div>
-        <div id="loader-text" class="loader-status">Initializing Game...</div>
+        <div id="loader-text" class="loader-status">Initializing System...</div>
+
+        <!-- Tutorial / Guide -->
+        <div class="tutorial-panel">
+            <div class="tutorial-title">Combat Training Guide</div>
+            <div class="tutorial-grid">
+                <div class="tutorial-item">
+                    <span class="key-cap">W / A / S / D</span>
+                    <span>Movement</span>
+                </div>
+                <div class="tutorial-item">
+                    <span class="key-cap">Left-Click</span>
+                    <span>Standard Punch (10 DMG)</span>
+                </div>
+                <div class="tutorial-item">
+                    <span class="key-cap">Spacebar</span>
+                    <span>Jump Evasion</span>
+                </div>
+                <div class="tutorial-item">
+                    <span class="key-cap">Right-Click</span>
+                    <span>Power Kick (18 DMG)</span>
+                </div>
+                <div class="tutorial-item">
+                    <span class="key-cap">B</span>
+                    <span>Strict Block (85% Red.)</span>
+                </div>
+                <div class="tutorial-item">
+                    <span class="key-cap">Arrows</span>
+                    <span>Alt. Movement</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="announcer-overlay" class="overlay">
@@ -437,157 +582,234 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
     <script>
-        // --- Smart Caching with Cache API ---
-        async function getCachedUrlOrFetch(url) {
-            if (!('caches' in window)) return url;
-            try {
-                const cache = await caches.open('gltf-cache-v1');
-                let response = await cache.match(url);
-                if (!response) {
-                    console.log(`Caching asset: ${url}`);
-                    await cache.add(url);
-                    response = await cache.match(url);
-                }
-                const blob = await response.blob();
-                return URL.createObjectURL(blob);
-            } catch (e) {
-                console.warn(`Cache failed for ${url}, using direct path`, e);
-                return url;
-            }
-        }
-
-        // --- Web Audio API Procedural Sound FX ---
-        class SoundFX {
+        // --- Web Audio API Engine & Native Mapping ---
+        class AudioManager {
             constructor() {
                 this.ctx = null;
+                this.buffers = {};
+                this.synthesizer = new ProceduralSynth();
             }
+
             init() {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 }
             }
-            playPunch() {
+
+            async preloadAudio(name, url) {
                 this.init();
-                if (!this.ctx) return;
-                const now = this.ctx.currentTime;
-                
-                // Swoosh (Noise)
-                const bufferSize = this.ctx.sampleRate * 0.12;
-                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const decodedData = await this.ctx.decodeAudioData(arrayBuffer);
+                    this.buffers[name] = decodedData;
+                    console.log(`Successfully loaded audio: ${name}`);
+                } catch (e) {
+                    console.warn(`Could not load audio file "${url}". Using procedural synthesizer fallback.`, e);
+                }
+            }
+
+            play(name) {
+                this.init();
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+
+                const buffer = this.buffers[name];
+                if (buffer) {
+                    const source = this.ctx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(this.ctx.destination);
+                    source.start(0);
+                } else {
+                    // Precise Synthesizer Fallbacks
+                    if (name === 'player_punch') {
+                        this.synthesizer.playPunch(0.12, 150, 40);
+                    } else if (name === 'monster_punch') {
+                        this.synthesizer.playPunch(0.18, 110, 30);
+                    } else if (name === 'victory') {
+                        this.synthesizer.playFanfare(true);
+                    } else if (name === 'defeat') {
+                        this.synthesizer.playFanfare(false);
+                    } else if (name === 'fight') {
+                        this.synthesizer.playFightChime();
+                    } else if (name === 'hit') {
+                        this.synthesizer.playHit();
+                    } else if (name === 'block') {
+                        this.synthesizer.playBlock();
+                    }
+                }
+            }
+        }
+
+        // --- Procedural Synthesizer Fallback ---
+        class ProceduralSynth {
+            playPunch(duration, startFreq, endFreq) {
+                const ctx = audioManager.ctx;
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                // Noise swoosh
+                const bufferSize = ctx.sampleRate * duration;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) {
                     data[i] = Math.random() * 2 - 1;
                 }
-                const noise = this.ctx.createBufferSource();
+                const noise = ctx.createBufferSource();
                 noise.buffer = buffer;
-                
-                const filter = this.ctx.createBiquadFilter();
+
+                const filter = ctx.createBiquadFilter();
                 filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(600, now);
-                filter.frequency.exponentialRampToValueAtTime(100, now + 0.12);
-                
-                const noiseGain = this.ctx.createGain();
-                noiseGain.gain.setValueAtTime(0.4, now);
-                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-                
+                filter.frequency.setValueAtTime(startFreq * 4, now);
+                filter.frequency.exponentialRampToValueAtTime(endFreq * 4, now + duration);
+
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
                 noise.connect(filter);
-                filter.connect(noiseGain);
-                noiseGain.connect(this.ctx.destination);
-                
-                // Low thud
-                const osc = this.ctx.createOscillator();
-                const oscGain = this.ctx.createGain();
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+
+                // Low frequency thud
+                const osc = ctx.createOscillator();
+                const oscGain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-                
-                oscGain.gain.setValueAtTime(0.7, now);
-                oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                
+                osc.frequency.setValueAtTime(startFreq, now);
+                osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+
+                oscGain.gain.setValueAtTime(0.6, now);
+                oscGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
                 osc.connect(oscGain);
-                oscGain.connect(this.ctx.destination);
-                
+                oscGain.connect(ctx.destination);
+
                 noise.start(now);
                 osc.start(now);
-                noise.stop(now + 0.12);
-                osc.stop(now + 0.1);
+                noise.stop(now + duration);
+                osc.stop(now + duration);
             }
+
             playHit() {
-                this.init();
-                if (!this.ctx) return;
-                const now = this.ctx.currentTime;
-                
-                // Low grunt/thud
-                const osc = this.ctx.createOscillator();
-                const oscGain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(220, now);
-                osc.frequency.exponentialRampToValueAtTime(60, now + 0.18);
-                
-                oscGain.gain.setValueAtTime(0.9, now);
-                oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-                
-                osc.connect(oscGain);
-                oscGain.connect(this.ctx.destination);
-                
-                // High impact snap
-                const snap = this.ctx.createOscillator();
-                const snapGain = this.ctx.createGain();
-                snap.type = 'sawtooth';
-                snap.frequency.setValueAtTime(400, now);
-                snap.frequency.linearRampToValueAtTime(80, now + 0.08);
-                
-                snapGain.gain.setValueAtTime(0.4, now);
-                snapGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                
-                const filter = this.ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(1200, now);
-                
-                snap.connect(filter);
-                filter.connect(snapGain);
-                snapGain.connect(this.ctx.destination);
-                
+                const ctx = audioManager.ctx;
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.15);
+
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
                 osc.start(now);
-                snap.start(now);
-                osc.stop(now + 0.18);
-                snap.stop(now + 0.08);
+                osc.stop(now + 0.15);
             }
+
             playBlock() {
-                this.init();
-                if (!this.ctx) return;
-                const now = this.ctx.currentTime;
-                
-                const osc = this.ctx.createOscillator();
-                const oscGain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(500, now);
-                osc.frequency.exponentialRampToValueAtTime(250, now + 0.08);
-                
-                oscGain.gain.setValueAtTime(0.5, now);
-                oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                
-                osc.connect(oscGain);
-                oscGain.connect(this.ctx.destination);
-                
+                const ctx = audioManager.ctx;
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(450, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
                 osc.start(now);
                 osc.stop(now + 0.08);
             }
-        }
-        const soundFX = new SoundFX();
 
-        // Unlock audio context on user interaction
+            playFightChime() {
+                const ctx = audioManager.ctx;
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc1.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(330, now); // E4
+                osc1.frequency.setValueAtTime(440, now + 0.15); // A4
+
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(660, now);
+                osc2.frequency.setValueAtTime(880, now + 0.15);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.5);
+                osc2.stop(now + 0.5);
+            }
+
+            playFanfare(victory) {
+                const ctx = audioManager.ctx;
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                const freqs = victory ? [261.63, 329.63, 392.00, 523.25] : [220.00, 207.65, 196.00, 146.83];
+                const type = victory ? 'triangle' : 'sawtooth';
+
+                freqs.forEach((f, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(f, now + (index * 0.15));
+
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.3, now + (index * 0.15) + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + (index * 0.15) + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now + (index * 0.15));
+                    osc.stop(now + (index * 0.15) + 0.4);
+                });
+            }
+        }
+
+        const audioManager = new AudioManager();
+
+        // Unlock audio context on user interaction safely
         function unlockAudio() {
-            soundFX.init();
-            if (soundFX.ctx && soundFX.ctx.state === 'suspended') {
-                soundFX.ctx.resume();
+            audioManager.init();
+            if (audioManager.ctx && audioManager.ctx.state === 'suspended') {
+                audioManager.ctx.resume();
             }
         }
         window.addEventListener('click', unlockAudio);
         window.addEventListener('keydown', unlockAudio);
         window.addEventListener('touchstart', unlockAudio);
 
-        // --- Game Setup & State ---
+        // Prevent Right-Click Context Menu
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // --- Game Setup & Balancing ---
+        const MAX_HEALTH = 450;
+
         const GameState = {
             LOADING: 0,
             INTRO: 1,
@@ -600,13 +822,11 @@
         let round = 1;
         let playerWins = 0;
         let enemyWins = 0;
-
-        // Strict safety check handle for AI
         let playerMesh = null;
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a0c);
-        scene.fog = new THREE.FogExp2(0x0a0a0c, 0.03);
+        scene.background = new THREE.Color(0x0a0a12);
+        scene.fog = new THREE.FogExp2(0x0a0a12, 0.03);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
         const cameraLookTarget = new THREE.Vector3(0, 1.2, 0);
@@ -618,7 +838,7 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // Environment Lights
+        // Environmental Lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambientLight);
 
@@ -640,7 +860,7 @@
         // Stark Minimalist Arena Ground
         const floorGeo = new THREE.PlaneGeometry(50, 50);
         const floorMat = new THREE.MeshStandardMaterial({ 
-            color: 0x111115, 
+            color: 0x111116, 
             roughness: 0.8, 
             metalness: 0.2 
         });
@@ -649,7 +869,7 @@
         floor.receiveShadow = true;
         scene.add(floor);
 
-        const grid = new THREE.GridHelper(40, 40, 0x00f3ff, 0x222226);
+        const grid = new THREE.GridHelper(40, 40, 0x00f3ff, 0x22222a);
         grid.position.y = 0.01;
         scene.add(grid);
 
@@ -661,25 +881,73 @@
         ring.position.y = 0.02;
         scene.add(ring);
 
+        // Dual Color Theme Switcher
+        let currentTheme = 'dark';
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        function toggleTheme() {
+            if (currentTheme === 'dark') {
+                currentTheme = 'light';
+                themeToggleBtn.innerText = "Theme: Light";
+                scene.background.setHex(0xf0f4f8);
+                scene.fog.color.setHex(0xf0f4f8);
+                ambientLight.color.setHex(0xffffff);
+                ambientLight.intensity = 1.3;
+                dirLight.intensity = 1.5;
+                grid.material.color.setHex(0x0088ff);
+                document.body.style.setProperty('--dark', '#f0f4f8');
+                document.body.style.setProperty('--light', '#0a0a12');
+            } else {
+                currentTheme = 'dark';
+                themeToggleBtn.innerText = "Theme: Dark";
+                scene.background.setHex(0x0a0a12);
+                scene.fog.color.setHex(0x0a0a12);
+                ambientLight.color.setHex(0xffffff);
+                ambientLight.intensity = 0.6;
+                dirLight.intensity = 1.2;
+                grid.material.color.setHex(0x00f3ff);
+                document.body.style.setProperty('--dark', '#0a0a12');
+                document.body.style.setProperty('--light', '#f0f4f8');
+            }
+        }
+        themeToggleBtn.addEventListener('click', toggleTheme);
+
         // Input Systems
         const keys = {};
-        const touch = { up: false, down: false, left: false, right: false, punch: false, block: false, jump: false };
+        const touch = { up: false, down: false, left: false, right: false, punch: false, kick: false, block: false, jump: false };
 
         window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
         window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
-        window.addEventListener('mousedown', () => { handlePunchInput(); });
+        
+        // Mouse Listeners
+        window.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+                handlePunchInput();
+            } else if (e.button === 2) {
+                handleKickInput();
+            }
+        });
 
         // Touch Listeners
         function bindTouchBtn(id, targetKey) {
             const btn = document.getElementById(id);
-            btn.addEventListener('touchstart', (e) => { e.preventDefault(); touch[targetKey] = true; if(targetKey === 'punch') handlePunchInput(); });
-            btn.addEventListener('touchend', (e) => { e.preventDefault(); touch[targetKey] = false; });
+            btn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                touch[targetKey] = true; 
+                if (targetKey === 'punch') handlePunchInput();
+                if (targetKey === 'kick') handleKickInput();
+            });
+            btn.addEventListener('touchend', (e) => { 
+                e.preventDefault(); 
+                touch[targetKey] = false; 
+            });
         }
         bindTouchBtn('btn-up', 'up');
         bindTouchBtn('btn-down', 'down');
         bindTouchBtn('btn-left', 'left');
         bindTouchBtn('btn-right', 'right');
         bindTouchBtn('btn-punch', 'punch');
+        bindTouchBtn('btn-kick', 'kick');
         bindTouchBtn('btn-block', 'block');
         bindTouchBtn('btn-jump', 'jump');
 
@@ -687,6 +955,13 @@
             if (currentGameState !== GameState.FIGHTING) return;
             if (!player.isAttacking && !player.isHit && !player.isBlocking) {
                 player.triggerPunch();
+            }
+        }
+
+        function handleKickInput() {
+            if (currentGameState !== GameState.FIGHTING) return;
+            if (!player.isAttacking && !player.isHit && !player.isBlocking) {
+                player.triggerKick();
             }
         }
 
@@ -698,10 +973,11 @@
                 this.mixer = null;
                 this.actions = {};
                 this.currentState = 'idle';
-                this.health = 100;
-                this.maxHealth = 100;
+                this.health = MAX_HEALTH;
+                this.maxHealth = MAX_HEALTH;
                 
                 this.isAttacking = false;
+                this.isKick = false;
                 this.isBlocking = false;
                 this.isHit = false;
                 this.isJumping = false;
@@ -711,7 +987,7 @@
                 this.actionTimer = 0;
                 this.actionDuration = 0;
                 this.isProcedural = false;
-                this.parts = {}; // Reference for procedural fallback animations
+                this.parts = {}; // Reference for fallback/procedural animation
 
                 scene.add(this.mesh);
             }
@@ -719,7 +995,7 @@
             buildProcedural() {
                 this.isProcedural = true;
                 const mainColor = this.isPlayer ? 0x00f3ff : 0xff0055;
-                const subColor = 0x222228;
+                const subColor = 0x22222a;
 
                 // Torso
                 const torsoGeo = new THREE.BoxGeometry(0.7, 1.0, 0.4);
@@ -740,7 +1016,7 @@
                 this.mesh.add(head);
                 this.parts.head = head;
 
-                // Glowing Visor / Eyes
+                // Glowing Visor
                 const visorGeo = new THREE.BoxGeometry(0.3, 0.08, 0.2);
                 const visorMat = new THREE.MeshBasicMaterial({ color: mainColor });
                 const visor = new THREE.Mesh(visorGeo, visorMat);
@@ -781,33 +1057,34 @@
             setupGLTFActions(gltf) {
                 this.mixer = new THREE.AnimationMixer(gltf.scene);
                 const clips = gltf.animations;
-                
-                // Print all available animation names to the console
-                console.log(`${this.isPlayer ? "Player (Penta)" : "Enemy (Monster)"} available animations:`, clips.map(c => c.name));
 
                 if (clips.length === 0) return;
 
-                // Pre-map default fallback as the first available clip
                 const defaultClip = clips[0];
                 const defaultAction = this.mixer.clipAction(defaultClip);
 
-                // Map specific animations if found
                 clips.forEach(clip => {
                     const name = clip.name.toLowerCase();
                     if (name.includes('idle')) this.actions['idle'] = this.mixer.clipAction(clip);
                     else if (name.includes('walk') || name.includes('run')) this.actions['walk'] = this.mixer.clipAction(clip);
+                    else if (name.includes('kick')) this.actions['kick'] = this.mixer.clipAction(clip);
                     else if (name.includes('punch') || name.includes('attack')) this.actions['punch'] = this.mixer.clipAction(clip);
                     else if (name.includes('block') || name.includes('defend')) this.actions['block'] = this.mixer.clipAction(clip);
                     else if (name.includes('hit') || name.includes('damage')) this.actions['hit'] = this.mixer.clipAction(clip);
                 });
 
-                // Fallback Animation Logic: If specific clips are not found, automatically map the first available clip
+                // Fail-safe fallbacks
                 const requiredStates = ['idle', 'walk', 'punch', 'block', 'hit'];
                 requiredStates.forEach(state => {
                     if (!this.actions[state]) {
                         this.actions[state] = defaultAction;
                     }
                 });
+
+                // Kick animation fallback to punch if not present in clips
+                if (!this.actions['kick']) {
+                    this.actions['kick'] = this.actions['punch'];
+                }
             }
 
             fadeTo(state, duration = 0.15) {
@@ -835,12 +1112,17 @@
 
             triggerPunch() {
                 this.isAttacking = true;
+                this.isKick = false;
                 this.actionTimer = 0;
                 this.actionDuration = 0.4;
                 this.fadeTo('punch', 0.05);
-                soundFX.playPunch();
 
-                // Compute Hit Detection instantly at peak of attack (0.15s offset simulation)
+                if (this.isPlayer) {
+                    audioManager.play('player_punch');
+                } else {
+                    audioManager.play('monster_punch');
+                }
+
                 setTimeout(() => {
                     if (currentGameState !== GameState.FIGHTING) return;
                     if (this.isHit) return; // Interrupted
@@ -848,25 +1130,53 @@
                     const target = this.isPlayer ? enemy : player;
                     const dist = this.mesh.position.distanceTo(target.mesh.position);
                     
-                    if (dist < 1.8) {
-                        // Angle check to see if facing target
+                    if (dist < 2.3) {
                         const toTarget = new THREE.Vector3().subVectors(target.mesh.position, this.mesh.position).normalize();
                         const facing = this.direction.dot(toTarget);
                         
                         if (facing > 0.5) {
-                            target.takeDamage(15);
+                            target.takeDamage(10); // Balanced punch damage
                         }
                     }
                 }, 150);
             }
 
+            triggerKick() {
+                this.isAttacking = true;
+                this.isKick = true;
+                this.actionTimer = 0;
+                this.actionDuration = 0.6; // Slower startup execution
+                this.fadeTo('kick', 0.1);
+
+                if (this.isPlayer) {
+                    audioManager.play('player_punch'); // Share standard attack audio context
+                }
+
+                setTimeout(() => {
+                    if (currentGameState !== GameState.FIGHTING) return;
+                    if (this.isHit) return; // Interrupted
+                    
+                    const target = this.isPlayer ? enemy : player;
+                    const dist = this.mesh.position.distanceTo(target.mesh.position);
+                    
+                    if (dist < 2.5) {
+                        const toTarget = new THREE.Vector3().subVectors(target.mesh.position, this.mesh.position).normalize();
+                        const facing = this.direction.dot(toTarget);
+                        
+                        if (facing > 0.5) {
+                            target.takeDamage(18); // Power kick damage
+                        }
+                    }
+                }, 300);
+            }
+
             takeDamage(amount) {
                 if (this.isBlocking) {
-                    soundFX.playBlock();
-                    this.health -= amount * 0.15; // 85% damage reduction
+                    audioManager.play('block');
+                    this.health -= amount * 0.15; // Strict Block (85% damage reduction)
                     createHitSparks(this.mesh.position.clone().add(new THREE.Vector3(0, 1.0, 0.3)), 0x00f3ff);
                 } else {
-                    soundFX.playHit();
+                    audioManager.play('hit');
                     this.health -= amount;
                     this.isHit = true;
                     this.actionTimer = 0;
@@ -886,19 +1196,20 @@
             update(delta, opponent) {
                 if (this.mixer) this.mixer.update(delta);
 
-                // Handle action durations (punch, hit recovery)
+                // Handle action durations
                 if (this.isAttacking || this.isHit) {
                     this.actionTimer += delta;
                     if (this.actionTimer >= this.actionDuration) {
                         this.isAttacking = false;
+                        this.isKick = false;
                         this.isHit = false;
                         this.fadeTo('idle');
                     }
                 }
 
-                // Gravity and Jump
+                // Gravity & Jump
                 if (this.isJumping) {
-                    this.velocity.y -= 18 * delta; // Gravity
+                    this.velocity.y -= 18 * delta;
                     this.mesh.position.y += this.velocity.y * delta;
                     if (this.mesh.position.y <= 0) {
                         this.mesh.position.y = 0;
@@ -907,16 +1218,20 @@
                     }
                 }
 
-                // Update Procedural Animations if GLTF failed
+                // Procedural Animation / Fallback leg-mesh rotation
                 if (this.isProcedural) {
                     const time = performance.now() * 0.003;
                     const parts = this.parts;
                     
-                    // Reset positions
+                    // Reset defaults
                     parts.leftLeg.position.set(-0.2, 0, 0);
                     parts.rightLeg.position.set(0.2, 0, 0);
+                    parts.leftLeg.rotation.set(0, 0, 0);
+                    parts.rightLeg.rotation.set(0, 0, 0);
                     parts.leftArm.position.set(-0.45, 0.6, 0);
                     parts.rightArm.position.set(0.45, 0.6, 0);
+                    parts.leftArm.rotation.set(0, 0, 0);
+                    parts.rightArm.rotation.set(0, 0, 0);
                     parts.torso.rotation.set(0, 0, 0);
                     parts.head.position.set(0, 1.1, 0);
 
@@ -925,8 +1240,6 @@
                         parts.torso.position.y = 0.5 + breath;
                         parts.leftArm.rotation.z = -0.1 + Math.sin(time * 3) * 0.05;
                         parts.rightArm.rotation.z = 0.1 - Math.sin(time * 3) * 0.05;
-                        parts.leftLeg.rotation.x = 0;
-                        parts.rightLeg.rotation.x = 0;
                     } else if (this.currentState === 'walk') {
                         const swing = Math.sin(time * 12);
                         parts.leftLeg.rotation.x = swing * 0.5;
@@ -939,6 +1252,13 @@
                         parts.rightArm.position.z = reach;
                         parts.rightArm.rotation.x = -Math.PI / 2;
                         parts.torso.rotation.y = -reach * 0.3;
+                    } else if (this.currentState === 'kick') {
+                        // Procedural leg rotation fallback
+                        const p = (this.actionTimer / this.actionDuration) * Math.PI;
+                        const lift = Math.sin(p) * 1.2;
+                        parts.rightLeg.rotation.x = -lift;
+                        parts.rightLeg.position.y = Math.sin(p) * 0.2;
+                        parts.torso.rotation.x = Math.sin(p) * 0.15;
                     } else if (this.currentState === 'block') {
                         parts.leftArm.rotation.x = -Math.PI / 2.5;
                         parts.leftArm.rotation.y = 0.4;
@@ -948,12 +1268,18 @@
                         const p = (this.actionTimer / this.actionDuration) * Math.PI;
                         parts.torso.rotation.x = -Math.sin(p) * 0.3;
                     }
+                } else if (this.isAttacking && this.isKick) {
+                    // Hybrid fallback: If standard GLTF model is missing kick, procedurally pivot the model's right leg
+                    const rightLeg = this.mesh.getObjectByName('RightLeg') || this.mesh.getObjectByName('mixamorigRightLeg');
+                    if (rightLeg) {
+                        const p = (this.actionTimer / this.actionDuration) * Math.PI;
+                        rightLeg.rotation.x = -Math.sin(p) * 1.2;
+                    }
                 }
 
-                // Restrict movement if locked in animation
+                // Lock movement controls during active action execution
                 if (this.isAttacking || this.isHit || currentGameState !== GameState.FIGHTING) return;
 
-                // Handle Controls
                 if (this.isPlayer) {
                     this.handlePlayerMovement(delta, opponent);
                 } else {
@@ -976,7 +1302,7 @@
                 if (keys['a'] || keys['arrowleft'] || touch.left) moveX = -1;
                 if (keys['d'] || keys['arrowright'] || touch.right) moveX = 1;
 
-                // Block
+                // Handle Blocking
                 if (keys['b'] || touch.block) {
                     this.isBlocking = true;
                     this.fadeTo('block');
@@ -985,7 +1311,7 @@
                     this.isBlocking = false;
                 }
 
-                // Jump
+                // Handle Jumping
                 if ((keys[' '] || touch.jump) && !this.isJumping) {
                     this.isJumping = true;
                     this.velocity.y = 7.5;
@@ -997,12 +1323,11 @@
                     this.mesh.position.z += moveZ * speed * delta;
                     this.fadeTo('walk');
 
-                    // Compute facing direction vector based on movement
                     this.direction.set(moveX, 0, moveZ).normalize();
                     const targetAngle = Math.atan2(moveX, moveZ);
                     this.mesh.rotation.y = targetAngle;
                 } else {
-                    // Face opponent when idle
+                    // Face opponent when standing idle
                     const toOpponent = new THREE.Vector3().subVectors(opponent.mesh.position, this.mesh.position);
                     toOpponent.y = 0;
                     toOpponent.normalize();
@@ -1013,8 +1338,7 @@
             }
 
             handleAIMovement(delta, opponent) {
-                // Strict Safety Check: Ensures the rendering and animation loops do not crash if player is not loaded
-                if (!playerMesh) return;
+                if (!playerMesh) return; // Strict safety check guardrail
 
                 const dist = this.mesh.position.distanceTo(opponent.mesh.position);
                 const toOpponent = new THREE.Vector3().subVectors(opponent.mesh.position, this.mesh.position);
@@ -1023,37 +1347,38 @@
                 this.direction.copy(toOpponent);
                 this.mesh.rotation.y = Math.atan2(toOpponent.x, toOpponent.z);
 
-                const combatRange = 1.6;
-
-                if (dist > combatRange) {
-                    // Advance towards player
-                    const speed = 3.0;
+                // Smart Monster AI Loop
+                if (dist > 2.3) {
+                    // Walk forward to target
+                    const speed = 3.2;
                     this.mesh.position.addScaledVector(toOpponent, speed * delta);
                     this.fadeTo('walk');
                     this.isBlocking = false;
                 } else {
-                    // In combat range - AI Decision Maker
+                    // Execute tactical combat actions inside range
                     this.fadeTo('idle');
                     
-                    if (Math.random() < 0.015) { // Frame-based attack probability
-                        this.triggerPunch();
-                    } else if (Math.random() < 0.01 && !this.isBlocking) {
-                        // Hold block briefly
+                    // Regulated attack patterns
+                    if (Math.random() < 0.015) {
+                        this.triggerPunch(); // Triggers punch + monster_punch.mp3 internally
+                    } else if (Math.random() < 0.008 && !this.isBlocking) {
                         this.isBlocking = true;
                         this.fadeTo('block');
-                        setTimeout(() => { this.isBlocking = false; }, 800);
+                        setTimeout(() => { this.isBlocking = false; }, 600);
                     }
                 }
             }
 
-            reset(pos) {
+            reset(pos, rotY) {
                 this.mesh.position.copy(pos);
-                this.health = 100;
+                this.mesh.rotation.set(0, rotY, 0);
+                this.health = MAX_HEALTH;
                 this.isAttacking = false;
+                this.isKick = false;
                 this.isBlocking = false;
                 this.isHit = false;
                 this.isJumping = false;
-                this.velocity.set(0,0,0);
+                this.velocity.set(0, 0, 0);
                 this.fadeTo('idle');
             }
         }
@@ -1083,7 +1408,7 @@
                     (Math.random() * 4) + 2,
                     (Math.random() - 0.5) * 6
                 );
-                p.life = 0.4; // seconds
+                p.life = 0.4;
                 scene.add(p);
                 activeSparks.push(p);
             }
@@ -1093,7 +1418,7 @@
             for (let i = activeSparks.length - 1; i >= 0; i--) {
                 const p = activeSparks[i];
                 p.position.addScaledVector(p.velocity, delta);
-                p.velocity.y -= 9.8 * delta; // Gravity
+                p.velocity.y -= 9.8 * delta;
                 p.life -= delta;
                 if (p.life <= 0) {
                     scene.remove(p);
@@ -1103,114 +1428,105 @@
             }
         }
 
-        // --- Loader & Cache Logic ---
-        const loader = new THREE.GLTFLoader();
-        let loadedAssets = 0;
-        const totalAssets = 2;
+        // --- Loading Manager with Audio and Model Tracking ---
+        const loadingManager = new THREE.LoadingManager();
+        let audioFilesToLoad = [
+            { name: 'fight', url: 'fight.mp3' },
+            { name: 'player_punch', url: 'player_punch.mp3' },
+            { name: 'monster_punch', url: 'monster_punch.mp3' },
+            { name: 'victory', url: 'victory.mp3' },
+            { name: 'defeat', url: 'defeat.mp3' }
+        ];
+        let totalItems = audioFilesToLoad.length + 2; // Audio + 2 GLB Models
+        let loadedItems = 0;
 
+        function updateLoader() {
+            loadedItems++;
+            const percent = Math.round((loadedItems / totalItems) * 100);
+            document.getElementById('loader-progress').style.width = `${percent}%`;
+            document.getElementById('loader-text').innerText = `Loading Assets: ${percent}%`;
+
+            if (loadedItems >= totalItems) {
+                setTimeout(() => {
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    startMatch();
+                }, 800);
+            }
+        }
+
+        // Initialize and Load Assets
         async function initGame() {
-            updateLoaderStatus("Accessing local cache...", 10);
-            
-            const pentaPath = await getCachedUrlOrFetch('penta.glb');
-            updateLoaderStatus("Loading Penta Fighter...", 30);
-            
-            loader.load(pentaPath, 
+            // 1. Preload Audio Files
+            for (let file of audioFilesToLoad) {
+                await audioManager.preloadAudio(file.name, file.url);
+                updateLoader();
+            }
+
+            // 2. Load Penta GLTF Model
+            const loader = new THREE.GLTFLoader(loadingManager);
+            loader.load('penta.glb', 
                 (gltf) => {
                     const model = gltf.scene;
-
-                    // Auto-Scale & Center Model
                     const box = new THREE.Box3().setFromObject(model);
                     const size = new THREE.Vector3();
                     box.getSize(size);
                     const center = new THREE.Vector3();
                     box.getCenter(center);
 
-                    const targetHeight = 2.0; // Consistent visible height in the arena
+                    const targetHeight = 2.0;
                     const scaleFactor = targetHeight / (size.y || 1);
                     model.scale.setScalar(scaleFactor);
 
-                    // Ensure feet touch the ground plane perfectly (y = 0) and center the model
                     model.position.x = -center.x * scaleFactor;
                     model.position.z = -center.z * scaleFactor;
                     model.position.y = -box.min.y * scaleFactor;
 
                     player.mesh.add(model);
                     player.setupGLTFActions(gltf);
-                    
-                    playerMesh = model; // Set safe global handle
-                    assetLoaded();
+                    playerMesh = model;
+                    updateLoader();
                 },
-                (xhr) => {
-                    if (xhr.total) {
-                        const percent = Math.round((xhr.loaded / xhr.total) * 30) + 10;
-                        updateLoaderStatus("Loading Penta Fighter...", percent);
-                    }
-                },
+                undefined,
                 (err) => {
                     console.warn("Penta model loading failed, building procedural model.");
                     player.buildProcedural();
-                    playerMesh = player.mesh; // Set safe global handle to procedural mesh
-                    assetLoaded();
+                    playerMesh = player.mesh;
+                    updateLoader();
                 }
             );
 
-            const monsterPath = await getCachedUrlOrFetch('monster.glb');
-            updateLoaderStatus("Loading Monster...", 60);
-
-            loader.load(monsterPath, 
+            // 3. Load Monster GLTF Model
+            loader.load('monster.glb', 
                 (gltf) => {
                     const model = gltf.scene;
-
-                    // Auto-Scale & Center Model
                     const box = new THREE.Box3().setFromObject(model);
                     const size = new THREE.Vector3();
                     box.getSize(size);
                     const center = new THREE.Vector3();
                     box.getCenter(center);
 
-                    const targetHeight = 2.0; // Consistent visible height in the arena
+                    const targetHeight = 2.0;
                     const scaleFactor = targetHeight / (size.y || 1);
                     model.scale.setScalar(scaleFactor);
 
-                    // Ensure feet touch the ground plane perfectly (y = 0) and center the model
                     model.position.x = -center.x * scaleFactor;
                     model.position.z = -center.z * scaleFactor;
                     model.position.y = -box.min.y * scaleFactor;
 
                     enemy.mesh.add(model);
                     enemy.setupGLTFActions(gltf);
-                    assetLoaded();
+                    updateLoader();
                 },
-                (xhr) => {
-                    if (xhr.total) {
-                        const percent = Math.round((xhr.loaded / xhr.total) * 30) + 60;
-                        updateLoaderStatus("Loading Monster...", percent);
-                    }
-                },
+                undefined,
                 (err) => {
                     console.warn("Monster model loading failed, building procedural model.");
                     enemy.buildProcedural();
-                    assetLoaded();
+                    updateLoader();
                 }
             );
         }
 
-        function updateLoaderStatus(text, percent) {
-            document.getElementById('loader-text').innerText = text;
-            document.getElementById('loader-progress').style.width = `${percent}%`;
-        }
-
-        function assetLoaded() {
-            loadedAssets++;
-            if (loadedAssets >= totalAssets) {
-                setTimeout(() => {
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    startMatch();
-                }, 500);
-            }
-        }
-
-        // --- Game Flow & Loop ---
+        // --- Game Flow Control ---
         function startMatch() {
             round = 1;
             playerWins = 0;
@@ -1226,17 +1542,20 @@
             currentGameState = GameState.INTRO;
             document.getElementById('round-num').innerText = round;
             
-            player.reset(new THREE.Vector3(-2.5, 0, 0));
-            enemy.reset(new THREE.Vector3(2.5, 0, 0));
+            // Match Spawning Coordinates - Avoid clipping/overlapping
+            player.reset(new THREE.Vector3(-2.5, 0, 0), Math.PI / 2);
+            enemy.reset(new THREE.Vector3(2.5, 0, 0), -Math.PI / 2);
             updateUI();
 
-            // Announce Banner Sequence
+            // Round Presentation Sequence
             const banner = document.getElementById('announcer-text');
             banner.innerText = `ROUND ${round}`;
             banner.classList.add('show');
 
             setTimeout(() => {
                 banner.innerText = "FIGHT!";
+                audioManager.play('fight'); // Trigger fight start sound
+                
                 setTimeout(() => {
                     banner.classList.remove('show');
                     currentGameState = GameState.FIGHTING;
@@ -1251,11 +1570,13 @@
             if (winner === 'player') {
                 playerWins++;
                 banner.innerText = "YOU WIN ROUND!";
+                audioManager.play('victory'); // Trigger victory sound
                 if (playerWins === 1) document.getElementById('p-dot-1').classList.add('active');
                 if (playerWins === 2) document.getElementById('p-dot-2').classList.add('active');
             } else {
                 enemyWins++;
                 banner.innerText = "MONSTER WINS ROUND!";
+                audioManager.play('defeat'); // Trigger defeat sound
                 if (enemyWins === 1) document.getElementById('e-dot-1').classList.add('active');
                 if (enemyWins === 2) document.getElementById('e-dot-2').classList.add('active');
             }
@@ -1282,11 +1603,11 @@
             if (playerWins >= 2) {
                 title.innerText = "VICTORY";
                 title.style.color = "var(--cyan)";
-                subtitle.innerText = "YOU HAVE DOMINATED THE ARENA";
+                subtitle.innerText = "YOU HAVE DEFEATED THE MONSTER";
             } else {
                 title.innerText = "DEFEAT";
                 title.style.color = "var(--red)";
-                subtitle.innerText = "THE MONSTER HAS CRUSHED YOU";
+                subtitle.innerText = "THE MONSTER HAS DEFEATED YOU";
             }
             menu.classList.remove('hidden');
         }
@@ -1297,11 +1618,13 @@
         });
 
         function updateUI() {
-            document.getElementById('player-health').style.width = `${player.health}%`;
-            document.getElementById('enemy-health').style.width = `${enemy.health}%`;
+            const playerPercent = (player.health / MAX_HEALTH) * 100;
+            const enemyPercent = (enemy.health / MAX_HEALTH) * 100;
+            document.getElementById('player-health').style.width = `${playerPercent}%`;
+            document.getElementById('enemy-health').style.width = `${enemyPercent}%`;
         }
 
-        // Dynamic Tracking Camera System
+        // Camera Tracking
         function updateCamera(delta) {
             const pPos = player.mesh.position;
             const ePos = enemy.mesh.position;
@@ -1309,7 +1632,6 @@
             const midPoint = new THREE.Vector3().addVectors(pPos, ePos).multiplyScalar(0.5);
             const dist = pPos.distanceTo(ePos);
             
-            // Dynamic side-offset framing
             const camOffset = new THREE.Vector3(0, 2.5, Math.max(6.0, dist * 1.1));
             const targetCamPos = midPoint.clone().add(camOffset);
             
@@ -1318,13 +1640,13 @@
             camera.lookAt(cameraLookTarget);
         }
 
-        // --- Core Render Loop ---
+        // --- Render Loop ---
         const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
 
-            const delta = Math.min(clock.getDelta(), 0.1); // Cap delta to prevent clipping on frame drops
+            const delta = Math.min(clock.getDelta(), 0.1);
 
             player.update(delta, enemy);
             enemy.update(delta, player);
@@ -1335,14 +1657,14 @@
             renderer.render(scene, camera);
         }
 
-        // Handle Resizing
+        // Resize handler
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Initialize Engine
+        // Initialize Core System
         initGame();
         animate();
     </script>
