@@ -601,6 +601,9 @@
         let playerWins = 0;
         let enemyWins = 0;
 
+        // Strict safety check handle for AI
+        let playerMesh = null;
+
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a0a0c);
         scene.fog = new THREE.FogExp2(0x0a0a0c, 0.03);
@@ -779,6 +782,16 @@
                 this.mixer = new THREE.AnimationMixer(gltf.scene);
                 const clips = gltf.animations;
                 
+                // Print all available animation names to the console
+                console.log(`${this.isPlayer ? "Player (Penta)" : "Enemy (Monster)"} available animations:`, clips.map(c => c.name));
+
+                if (clips.length === 0) return;
+
+                // Pre-map default fallback as the first available clip
+                const defaultClip = clips[0];
+                const defaultAction = this.mixer.clipAction(defaultClip);
+
+                // Map specific animations if found
                 clips.forEach(clip => {
                     const name = clip.name.toLowerCase();
                     if (name.includes('idle')) this.actions['idle'] = this.mixer.clipAction(clip);
@@ -788,12 +801,13 @@
                     else if (name.includes('hit') || name.includes('damage')) this.actions['hit'] = this.mixer.clipAction(clip);
                 });
 
-                // Fail-safe mappings
-                if (!this.actions['idle'] && clips[0]) this.actions['idle'] = this.mixer.clipAction(clips[0]);
-                if (!this.actions['walk'] && clips[1]) this.actions['walk'] = this.mixer.clipAction(clips[1]);
-                if (!this.actions['punch'] && clips[2]) this.actions['punch'] = this.mixer.clipAction(clips[2]);
-                if (!this.actions['block'] && clips[3]) this.actions['block'] = this.mixer.clipAction(clips[3]);
-                if (!this.actions['hit'] && clips[4]) this.actions['hit'] = this.mixer.clipAction(clips[4]);
+                // Fallback Animation Logic: If specific clips are not found, automatically map the first available clip
+                const requiredStates = ['idle', 'walk', 'punch', 'block', 'hit'];
+                requiredStates.forEach(state => {
+                    if (!this.actions[state]) {
+                        this.actions[state] = defaultAction;
+                    }
+                });
             }
 
             fadeTo(state, duration = 0.15) {
@@ -999,6 +1013,9 @@
             }
 
             handleAIMovement(delta, opponent) {
+                // Strict Safety Check: Ensures the rendering and animation loops do not crash if player is not loaded
+                if (!playerMesh) return;
+
                 const dist = this.mesh.position.distanceTo(opponent.mesh.position);
                 const toOpponent = new THREE.Vector3().subVectors(opponent.mesh.position, this.mesh.position);
                 toOpponent.y = 0;
@@ -1099,8 +1116,28 @@
             
             loader.load(pentaPath, 
                 (gltf) => {
-                    player.mesh.add(gltf.scene);
+                    const model = gltf.scene;
+
+                    // Auto-Scale & Center Model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    const center = new THREE.Vector3();
+                    box.getCenter(center);
+
+                    const targetHeight = 2.0; // Consistent visible height in the arena
+                    const scaleFactor = targetHeight / (size.y || 1);
+                    model.scale.setScalar(scaleFactor);
+
+                    // Ensure feet touch the ground plane perfectly (y = 0) and center the model
+                    model.position.x = -center.x * scaleFactor;
+                    model.position.z = -center.z * scaleFactor;
+                    model.position.y = -box.min.y * scaleFactor;
+
+                    player.mesh.add(model);
                     player.setupGLTFActions(gltf);
+                    
+                    playerMesh = model; // Set safe global handle
                     assetLoaded();
                 },
                 (xhr) => {
@@ -1112,6 +1149,7 @@
                 (err) => {
                     console.warn("Penta model loading failed, building procedural model.");
                     player.buildProcedural();
+                    playerMesh = player.mesh; // Set safe global handle to procedural mesh
                     assetLoaded();
                 }
             );
@@ -1121,7 +1159,25 @@
 
             loader.load(monsterPath, 
                 (gltf) => {
-                    enemy.mesh.add(gltf.scene);
+                    const model = gltf.scene;
+
+                    // Auto-Scale & Center Model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    const center = new THREE.Vector3();
+                    box.getCenter(center);
+
+                    const targetHeight = 2.0; // Consistent visible height in the arena
+                    const scaleFactor = targetHeight / (size.y || 1);
+                    model.scale.setScalar(scaleFactor);
+
+                    // Ensure feet touch the ground plane perfectly (y = 0) and center the model
+                    model.position.x = -center.x * scaleFactor;
+                    model.position.z = -center.z * scaleFactor;
+                    model.position.y = -box.min.y * scaleFactor;
+
+                    enemy.mesh.add(model);
                     enemy.setupGLTFActions(gltf);
                     assetLoaded();
                 },
