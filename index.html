@@ -1,13 +1,3 @@
-An elegant and robust solution has been implemented to resolve the browser's Web Audio API autoplay restriction warnings. 
-
-### Key Improvements:
-1. **Deferred AudioContext Creation**: The `AudioContext` is no longer initialized during the asset preloading phase. Instead, raw audio files are fetched as `ArrayBuffer`s and stored.
-2. **User Gesture Requirement**: The game no longer starts automatically. Once loading is complete, a high-tech **"START GAME"** button is presented on the loading screen.
-3. **Safe Activation**: Clicking the "START GAME" button triggers the initialization and decoding of all preloaded audio buffers inside a valid user gesture context, completely satisfying modern browser autoplay policies and eliminating console warnings.
-
-Here is the complete, updated code:
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -235,13 +225,14 @@ Here is the complete, updated code:
             padding: 14px 36px;
             font-size: 16px;
             font-weight: 800;
-            letter-spacing: 4px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.2s ease;
             margin-top: 20px;
             pointer-events: auto;
             border-radius: 4px;
+            text-align: center;
         }
 
         .btn:hover {
@@ -546,7 +537,9 @@ Here is the complete, updated code:
         <div id="loader-text" class="loader-status">Initializing System...</div>
 
         <!-- START GAME Button (Initially Hidden) -->
-        <button id="btn-start-game" class="btn" style="display: none; margin-bottom: 25px; z-index: 110;">START GAME</button>
+        <button id="btn-start-game" class="btn" style="display: none; margin-bottom: 25px; z-index: 110;">
+            Start Game & Enable Audio<br><span style="font-size: 11px; letter-spacing: 1px;">ابدأ اللعب وتفعيل الأصوات</span>
+        </button>
 
         <!-- Tutorial / Guide -->
         <div class="tutorial-panel">
@@ -601,6 +594,7 @@ Here is the complete, updated code:
                 this.ctx = null;
                 this.buffers = {};
                 this.synthesizer = new ProceduralSynth();
+                this.rawBuffers = {};
             }
 
             async init() {
@@ -610,12 +604,21 @@ Here is the complete, updated code:
                 if (this.ctx && this.ctx.state === 'suspended') {
                     await this.ctx.resume();
                 }
+                
+                // Pre-warm audio pipeline with silent oscillator
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0, this.ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(0);
+                osc.stop(0.01);
+
                 if (this.rawBuffers) {
                     const raw = this.rawBuffers;
-                    delete this.rawBuffers; // Prevent double decoding
                     const promises = Object.keys(raw).map(async (name) => {
                         try {
-                            const decodedData = await this.ctx.decodeAudioData(raw[name]);
+                            const decodedData = await this.ctx.decodeAudioData(raw[name].slice(0));
                             this.buffers[name] = decodedData;
                             console.log(`Successfully decoded audio: ${name}`);
                         } catch (e) {
@@ -631,7 +634,6 @@ Here is the complete, updated code:
                     const response = await fetch(url);
                     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                     const arrayBuffer = await response.arrayBuffer();
-                    this.rawBuffers = this.rawBuffers || {};
                     this.rawBuffers[name] = arrayBuffer;
                     console.log(`Successfully preloaded raw audio: ${name}`);
                 } catch (e) {
@@ -640,8 +642,6 @@ Here is the complete, updated code:
             }
 
             play(name) {
-                this.init(); // Fire-and-forget initialization safety check
-
                 const buffer = this.buffers[name];
                 if (buffer && this.ctx) {
                     const source = this.ctx.createBufferSource();
@@ -816,14 +816,6 @@ Here is the complete, updated code:
         }
 
         const audioManager = new AudioManager();
-
-        // Unlock audio context on user interaction safely
-        function unlockAudio() {
-            audioManager.init();
-        }
-        window.addEventListener('click', unlockAudio);
-        window.addEventListener('keydown', unlockAudio);
-        window.addEventListener('touchstart', unlockAudio);
 
         // Prevent Right-Click Context Menu
         window.addEventListener('contextmenu', (e) => {
@@ -1173,6 +1165,8 @@ Here is the complete, updated code:
 
                 if (this.isPlayer) {
                     audioManager.play('player_punch'); // Share standard attack audio context
+                } else {
+                    audioManager.play('monster_punch');
                 }
 
                 setTimeout(() => {
@@ -1383,7 +1377,11 @@ Here is the complete, updated code:
                     
                     // Regulated attack patterns
                     if (Math.random() < 0.015) {
-                        this.triggerPunch(); // Triggers punch + monster_punch.mp3 internally
+                        if (Math.random() < 0.3) {
+                            this.triggerKick();
+                        } else {
+                            this.triggerPunch();
+                        }
                     } else if (Math.random() < 0.008 && !this.isBlocking) {
                         this.isBlocking = true;
                         this.fadeTo('block');
@@ -1465,7 +1463,7 @@ Here is the complete, updated code:
 
         function updateLoader() {
             loadedItems++;
-            const percent = Math.round((loadedItems / totalItems) * 100);
+            const percent = Math.min(Math.round((loadedItems / totalItems) * 100), 100);
             document.getElementById('loader-progress').style.width = `${percent}%`;
             document.getElementById('loader-text').innerText = `Loading Assets: ${percent}%`;
 
